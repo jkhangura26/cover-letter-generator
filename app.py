@@ -200,13 +200,9 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    """
-    Process the submitted form data (PDF resume, job description, tone, and focus),
-    generate a tailored cover letter via the Gemini API, and return it as a downloadable PDF.
-    """
     job_description = request.form.get('job_description')
-    tone = request.form.get('tone', 'Professional and personable')
-    focus = request.form.get('focus', 'Highlight relevant skills and experiences')
+    tone = request.form.get('tone') or "Professional"
+    focus = request.form.get('focus') or "Qualifications"
 
     if 'resume' not in request.files or request.files['resume'].filename == '':
         flash('Please upload a PDF resume file.')
@@ -223,19 +219,34 @@ def generate():
         return redirect(url_for('index'))
 
     if not resume_text or not job_description:
-        flash('Please provide both resume details and a job description.')
+        flash('Please provide both resume and job description.')
         return redirect(url_for('index'))
 
     try:
         cover_letter = generate_cover_letter(resume_text, job_description, tone, focus)
     except Exception as e:
-        return f"An error occurred during generation: {str(e)}"
+        flash(f"Error during generation: {str(e)}")
+        return redirect(url_for('index'))
 
+    # Save and redirect
     pdf_filename = f"cover_letter_{NAME.replace(' ', '_')}.pdf"
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], pdf_filename)
     save_cover_letter_to_pdf(cover_letter, output_path)
+    return redirect(url_for('result', filename=pdf_filename))
 
-    return send_file(output_path, as_attachment=True)
+@app.route('/result')
+def result():
+    filename = request.args.get('filename')
+    if not filename:
+        flash('Missing file.')
+        return redirect(url_for('index'))
+
+    return render_template('result.html', filename=filename)
+
+@app.route('/view/<filename>')
+def view_pdf(filename):
+    return send_file(os.path.join(app.config['OUTPUT_FOLDER'], filename))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

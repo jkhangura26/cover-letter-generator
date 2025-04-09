@@ -1,11 +1,39 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Your Cover Letter</title>
-  </head>
-  <body>
-    <h1>Your Generated Cover Letter</h1>
-    <pre>{{ cover_letter }}</pre>
-    <a href="{{ url_for('index') }}">Back</a>
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Your Generated Cover Letter</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <div class="container mt-5">
+    <div class="card shadow-sm p-4">
+      <h3 class="mb-4 text-center">Here’s Your Cover Letter</h3>
+
+      <iframe src="{{ url_for('view_pdf', filename=filename) }}"></iframe>
+
+      <div class="d-flex justify-content-center mt-4 gap-3">
+        <a href="{{ url_for('view_pdf', filename=filename) }}" download class="btn btn-success">
+          Download PDF
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+          Generate Again
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>
