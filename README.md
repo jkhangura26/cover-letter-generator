@@ -9,9 +9,9 @@ This is a Flask-based application that generates a tailored cover letter PDF by 
 - **Customizable Header:** Reads personal details (name, phone, email, LinkedIn, personal website) from environment variables.
 - **PDF Output:** Generates a professional PDF with a custom header and signature section.
 - **Reference Files:** Incorporates additional writing guides.
+- **Live Preview + Actions**: View the generated PDF directly on the result page with options to download or regenerate.
 
-
-## Installation
+## Installation (for Linux)
 
 1. **Clone the repository:**
 
