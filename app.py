@@ -89,7 +89,7 @@ def generate_cover_letter(resume_text, job_description, tone, focus):
         "3. Do not include placeholders – use all provided details.\n"
         "4. Keep the tone professional and reflective of the tone and focus provided. Fit the content on one page.\n"
         "5. Exclude any 'Sincerely' part or name after the signature.\n\n"
-        "6. Exclude any extraneous commentary—only include the cover letter content.\n"
+        "6. Exclude any extraneous commentary—only include the cover letter content. Do not write the name after.\n"
         "Please generate the cover letter based on the above guidelines."
     )
 
