@@ -22,7 +22,7 @@ OUTPUT_FOLDER = 'generated'
 ALLOWED_EXTENSIONS = {'pdf'}
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # Change for production use!
+app.secret_key = 'supersecretkey' 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
@@ -32,11 +32,11 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Set your Gemini API key from environment variable
 app.config['GEMINI_API_KEY'] = os.getenv('GEMINI_API_KEY', None)
-NAME = os.getenv('NAME', None)
-PHONE = os.getenv('PHONE', None)
-EMAIL = os.getenv('EMAIL', None)
-LINKEDIN = os.getenv('LINKEDIN', None)
-PERSONAL_WEBSITE = os.getenv('PERSONAL_WEBSITE', None)
+NAME = os.getenv('NAME', 'Your Name')
+PHONE = os.getenv('PHONE', 'Your Phone')
+EMAIL = os.getenv('EMAIL', 'Your Email')
+LINKEDIN = os.getenv('LINKEDIN', 'Your LinkedIn')
+PERSONAL_WEBSITE = os.getenv('PERSONAL_WEBSITE', 'Your Website')
 
 if not app.config['GEMINI_API_KEY']:
     raise ValueError("Please set the environment variable GEMINI_API_KEY")
@@ -58,8 +58,8 @@ def extract_text_from_file(filepath):
             text += page_text + "\n"
     return text
 
-def generate_cover_letter(resume_text, job_description):
-    """Generate a cover letter using the Gemini API, incorporating writing references."""
+def generate_cover_letter(resume_text, job_description, tone, focus):
+    """Generate a cover letter using the Gemini API, incorporating writing references and additional tone/focus settings."""
     
     # Read the contents of the reference files
     reference_texts = []
@@ -68,28 +68,27 @@ def generate_cover_letter(resume_text, job_description):
         if os.path.exists(file_name):
             with open(file_name, "r", encoding="utf-8") as file:
                 reference_texts.append(file.read())
-
-    # Combine reference texts
     references = "\n\n".join(reference_texts)
 
-    # Construct the prompt
+    # Construct the prompt with additional tone and focus instructions
     prompt = (
-        f"You are a professional cover letter generator. Your task is to create a clear and concise cover letter.\n\n"
+        f"You are a professional cover letter generator. Your task is to create a clear, concise, and tailored cover letter.\n\n"
         f"Resume Details:\n{resume_text}\n\n"
         f"Job Description:\n{job_description}\n\n"
+        f"Tone Preference: {tone}\n"
+        f"Focus Areas: {focus}\n\n"
         f"Cover Letter Guides for Reference:\n{references}\n\n"
         "Instructions:\n"
-        "1. Generate a tailored cover letter that highlights the candidate's skills and experience, and aligns with the job requirements.\n"
+        "1. Generate a tailored cover letter that highlights the candidate's skills and experience while aligning with the job requirements.\n"
         "2. The cover letter must be structured with the following parts:\n"
         "   - An introduction starting with 'Dear Hiring Manager' (or the specific name if available).\n"
         "   - Two body paragraphs.\n"
         "   - A conclusion paragraph.\n"
         "3. Do not leave any placeholders or blank fields; fill in all information using the provided details.\n"
         "4. Exclude any extraneous commentary—only include the cover letter content.\n"
-        "5. Maintain a professional yet personable tone. The final cover letter should fit on one page.\n"
-        "6. Do not write the sincerely part or name after.\n"
-        "7. There is no need to mention where the job came from"
-        "\n"
+        "5. Maintain a professional tone that reflects the selected tone preference and focus areas. The final cover letter should fit on one page.\n"
+        "6. Do not write the 'Sincerely' part or the name after.\n"
+        "7. There is no need to mention where the job came from.\n\n"
         "Please generate the cover letter based on the above guidelines."
     )
 
@@ -102,17 +101,17 @@ def generate_cover_letter(resume_text, job_description):
     return response.text
 
 def save_cover_letter_to_pdf(cover_body, output_path):
-    """Generate professional cover letter PDF with redesigned header layout"""
+    """Generate professional cover letter PDF with a clean and modern header layout."""
     c = canvas.Canvas(output_path, pagesize=letter)
     width, height = letter
     margin = 72  # 1 inch margins
 
+    # Register fonts (ensure that the .ttf files are in place)
     pdfmetrics.registerFont(TTFont("name", "name.ttf"))
     pdfmetrics.registerFont(TTFont("regular", "reg.ttf"))
     pdfmetrics.registerFont(TTFont("CursiveFont", "cursive.ttf"))
 
     # ===== Header Section =====
-    # Retrieve contact information from environment variables
     name_parts = NAME.split()  # Split the name into parts (first, last, etc.)
     contact_info = [PHONE, EMAIL, LINKEDIN, PERSONAL_WEBSITE]
 
@@ -121,14 +120,10 @@ def save_cover_letter_to_pdf(cover_body, output_path):
     contact_font_size = 10
     c.setFont("name", name_font_size)
     
-    # Calculate name column width
     name_column = margin  # Left-aligned name column
-
-    # Draw name parts
     y_name = height - margin
     for part in name_parts:
-        x_name = name_column 
-        c.drawString(x_name, y_name, part)
+        c.drawString(name_column, y_name, part)
         y_name -= 38  # Name line spacing
 
     # Draw contact info (right-aligned)
@@ -139,9 +134,9 @@ def save_cover_letter_to_pdf(cover_body, output_path):
         c.drawString(x_contact, y_contact, line)
         y_contact -= 14  # Contact line spacing
 
-    # Draw separator lines
+    # Separator lines
     lowest_y = min(y_name, y_contact)
-    line_y = lowest_y + 7  # Space below header content
+    line_y = lowest_y + 7
     c.setLineWidth(1)
     c.line(margin, line_y, width - margin, line_y)
     c.line(margin, line_y - 4, width - margin, line_y - 4)
@@ -150,64 +145,48 @@ def save_cover_letter_to_pdf(cover_body, output_path):
     current_date = datetime.now().strftime("%B %d, %Y")
     c.setFont("regular", 12)
     date_width = c.stringWidth(current_date, "regular", 12)
-    date_y = line_y - 30  # Space below separator lines
+    date_y = line_y - 30
     c.drawString(width - margin - date_width, date_y, current_date)
 
     # ===== Body Section =====
-    y_position = date_y + 4   # Space below date
-
+    y_position = date_y + 4
     body_style = ParagraphStyle(
         'Body',
         fontName='regular',
         fontSize=12,
         leading=16,
         alignment=TA_LEFT,
-        leftIndent=0,
-        rightIndent=0,
-        spaceBefore=0,
-        spaceAfter=16,
-        firstLineIndent=36
+        firstLineIndent=36,
+        spaceAfter=16
     )
-
     none_style = ParagraphStyle(
         'Body',
         fontName='regular',
         fontSize=12,
         leading=16,
         alignment=TA_LEFT,
-        leftIndent=0,
-        rightIndent=0,
-        spaceBefore=0,
         spaceAfter=16
     )
 
-    paragraphs = [p.strip() for p in cover_body.split('\n\n')]
+    paragraphs = [p.strip() for p in cover_body.split('\n\n') if p.strip()]
     first_paragraph = True
 
     for para in paragraphs:
-        if first_paragraph:
-            p = Paragraph(para.replace('\n', '<br/>'), none_style)
-            first_paragraph = False
-        else:
-            p = Paragraph(para.replace('\n', '<br/>'), body_style)
-            
-        p.wrap(width - 2*margin, height)
-        p_height = p.wrap(width - 2*margin, height)[1]
-        
+        style = none_style if first_paragraph else body_style
+        first_paragraph = False
+        p = Paragraph(para.replace('\n', '<br/>'), style)
+        w, p_height = p.wrap(width - 2 * margin, height)
         if y_position - p_height < margin + 100:  # Page break check
             c.showPage()
             y_position = height - margin
-        
         p.drawOn(c, margin, y_position - p_height)
-        y_position -= p_height + body_style.spaceAfter
+        y_position -= p_height + style.spaceAfter
 
     # ===== Signature Section =====
     y_position -= 40  # Space above signature
     c.setFont("regular", 12)
     c.drawString(margin, y_position, "Sincerely,")
     c.drawString(margin, y_position - 20, NAME)
-
-    # Cursive signature
     c.setFont("CursiveFont", 27)
     sig_width = c.stringWidth(NAME, "CursiveFont", 27)
     c.drawString(width - margin - sig_width, y_position - 20, NAME)
@@ -216,16 +195,18 @@ def save_cover_letter_to_pdf(cover_body, output_path):
 
 @app.route('/', methods=['GET'])
 def index():
-    """Render the main form where users can upload their resume and enter the job description."""
+    """Render the main form where users can upload their resume, enter the job description, and choose tone/focus."""
     return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
     """
-    Process the submitted form data (PDF resume file and job description),
-    generate a tailored cover letter via the Gemini API, and return as a downloadable PDF.
+    Process the submitted form data (PDF resume, job description, tone, and focus),
+    generate a tailored cover letter via the Gemini API, and return it as a downloadable PDF.
     """
     job_description = request.form.get('job_description')
+    tone = request.form.get('tone', 'Professional and personable')
+    focus = request.form.get('focus', 'Highlight relevant skills and experiences')
 
     if 'resume' not in request.files or request.files['resume'].filename == '':
         flash('Please upload a PDF resume file.')
@@ -246,11 +227,10 @@ def generate():
         return redirect(url_for('index'))
 
     try:
-        cover_letter = generate_cover_letter(resume_text, job_description)
+        cover_letter = generate_cover_letter(resume_text, job_description, tone, focus)
     except Exception as e:
         return f"An error occurred during generation: {str(e)}"
 
-    # Save cover letter as a PDF
     pdf_filename = f"cover_letter_{NAME.replace(' ', '_')}.pdf"
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], pdf_filename)
     save_cover_letter_to_pdf(cover_letter, output_path)
