@@ -70,7 +70,7 @@ def generate_cover_letter(resume_text, job_description, tone, focus):
     """Generate a tailored cover letter using Gemini API with tone and focus settings."""
     reference_texts = []
     for i in range(1, 5):
-        file_name = f"{i}.txt"
+        file_name = f"guides/{i}.txt"
         if os.path.exists(file_name):
             with open(file_name, "r", encoding="utf-8") as file:
                 reference_texts.append(file.read())
@@ -109,9 +109,9 @@ def save_cover_letter_to_pdf(cover_body, output_path):
     margin = 72  # 1 inch margins
 
     # Register fonts (ensure corresponding .ttf files are available)
-    pdfmetrics.registerFont(TTFont("name", "name.ttf"))
-    pdfmetrics.registerFont(TTFont("regular", "reg.ttf"))
-    pdfmetrics.registerFont(TTFont("CursiveFont", "cursive.ttf"))
+    pdfmetrics.registerFont(TTFont("name", "fonts/name.ttf"))
+    pdfmetrics.registerFont(TTFont("regular", "fonts/reg.ttf"))
+    pdfmetrics.registerFont(TTFont("CursiveFont", "fonts/cursive.ttf"))
 
     # ===== Header Section =====
     # Draw applicant name and contact details
